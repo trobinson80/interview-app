@@ -28,7 +28,7 @@ export default function LoginScreen() {
       console.log("Auth Success: ", user)
       navigation.reset({
         index: 0,
-        routes: [{name: 'Home' as never}]
+        routes: [{name: 'Main' as never}]
       });
     } catch (err: any) {
       console.log('Error during auth:', err);
