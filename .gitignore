@@ -1,1 +1,23 @@
 frontend/services/firebase.ts
+
+# Virtual environment
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+
+# Firebase service credentials
+backend/credentials/firebaseServiceAccount.json
+
+# Editor/IDE files
+*.swp
+.DS_Store
+.vscode/
+.idea/
+
+# OS-specific
+Thumbs.db
