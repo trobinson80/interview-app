@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Request, HTTPException
 from models.user import UserProfile
 from firebase import verify_token, db
+import os
+import json
 
 router = APIRouter()
+QUESTIONS_FILE = os.path.join(os.path.dirname(__file__), '../behavoiral_questions.json')
 
 def get_uid(request: Request):
     token = request.headers.get("Authorization")
@@ -49,3 +52,23 @@ def update_profile(profile: UserProfile, request: Request):
     doc_ref.set(profile.dict())
     
     return { "status": "updated" }
+
+@router.get("/question")
+def get_behavioral_question(request: Request):
+    print("behavoiral@@@")
+    uid = get_uid(request)
+
+    # Load all questions
+    with open(QUESTIONS_FILE, 'r') as f:
+        all_questions = json.load(f)
+    all_questions = all_questions["behavioral_questions"]
+    # Get list of questions user has already seen
+    seen_docs = db.collection('users').document(uid).collection('behavioral_answers').stream()
+    seen_questions = set(doc.id for doc in seen_docs)
+
+    # Find first unseen question
+    for q in all_questions:
+        if q["id"] not in seen_questions:
+            return { "question": q["question"], "id": q["id"] }
+
+    raise HTTPException(status_code=404, detail="No more unseen questions available")
