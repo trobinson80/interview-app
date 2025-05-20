@@ -156,3 +156,22 @@ def get_session_metrics(request: Request, days: int = Query(7)):
         })
 
     return { "metrics": results }
+
+@router.get("/previous-sessions")
+def get_all_sessions(request: Request):
+    uid = verify_token(request.headers.get("Authorization"))
+
+    sessions_ref = db.collection("users").document(uid).collection("behavioral_answers")
+    docs = sessions_ref.order_by("timestamp", direction="DESCENDING").stream()
+
+    results = []
+    for doc in docs:
+        data = doc.to_dict()
+        results.append({
+            "question": data.get("question"),
+            "answer": data.get("answer"),
+            "feedback": data.get("feedback"),
+            "timestamp": data.get("timestamp"),
+        })
+
+    return { "sessions": results }
