@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { login, signUp } from '../services/auth';
+import { saveUserProfile } from '../services/userApi';
 import { useNavigation } from '@react-navigation/native';
 
 export default function LoginScreen() {
@@ -22,13 +23,25 @@ export default function LoginScreen() {
   const navigation = useNavigation();
 
   const handleAuth = async () => {
-    console.log("Button has been clicked")
+    console.log("Button has been clicked");
     try {
-      const user = isLogin ? await login(email, password) : await signUp(email, password)
-      console.log("Auth Success: ", user)
+      const user = isLogin ? await login(email, password) : await signUp(email, password);
+      console.log("Auth Success: ", user);
+
+      if (!isLogin) {
+        console.log("Creating new user profile...");
+        await saveUserProfile({
+          name: '',
+          email: user.email ?? '',
+          experience: '',
+          goal: '',
+          tracks: [],
+        });
+      }
+
       navigation.reset({
         index: 0,
-        routes: [{name: 'Main' as never}]
+        routes: [{ name: 'Main' as never }],
       });
     } catch (err: any) {
       console.log('Error during auth:', err);
@@ -57,11 +70,9 @@ export default function LoginScreen() {
         />
         <Button title={isLogin ? 'Login' : 'Sign Up'} onPress={handleAuth} />
         <Text style={styles.toggle} onPress={() => setIsLogin(!isLogin)}>
-          <Text>
-            {isLogin
-              ? "Don't have an account? Sign Up"
-              : 'Already have an account? Login'}
-          </Text>
+          {isLogin
+            ? "Don't have an account? Sign Up"
+            : 'Already have an account? Login'}
         </Text>
         {error && <Text style={styles.error}>{error}</Text>}
       </View>

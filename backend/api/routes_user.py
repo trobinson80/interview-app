@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Request, HTTPException
 from models.user import UserProfile
-from firebase import verify_token
+from firebase import verify_token, db
 
 router = APIRouter()
-user_store = {}
 
 def get_uid(request: Request):
     token = request.headers.get("Authorization")
@@ -22,8 +21,16 @@ def get_uid(request: Request):
 def get_profile(request: Request):
     uid = get_uid(request)
     print(f"[GET /profile] Fetching profile for UID: {uid}")
-    if uid not in user_store:
-        print(f"[GET /profile] No existing profile, returning default for {uid}")
+    
+    doc_ref = db.collection("user_profiles").document(uid)
+    doc = doc_ref.get()
+    
+    if doc.exists:
+        data = doc.to_dict()
+        print(f"[GET /profile] Found profile: {data}")
+        return data
+    else:
+        print(f"[GET /profile] No profile found, returning default")
         return UserProfile(
             name="",
             email="",
@@ -31,13 +38,14 @@ def get_profile(request: Request):
             goal="",
             tracks=[]
         )
-    print(f"[GET /profile] Found profile for {uid}: {user_store[uid]}")
-    return user_store[uid]
 
 @router.post("/profile")
 def update_profile(profile: UserProfile, request: Request):
     uid = get_uid(request)
     print(f"[POST /profile] Updating profile for UID: {uid}")
     print(f"[POST /profile] Data: {profile}")
-    user_store[uid] = profile
+    
+    doc_ref = db.collection("user_profiles").document(uid)
+    doc_ref.set(profile.dict())
+    
     return { "status": "updated" }

@@ -1,9 +1,8 @@
-import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { auth } from './services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -13,31 +12,27 @@ import DSAScreen from './screens/DSAScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import ChallengesScreen from './screens/ChallengesScreen';
 
-// Define navigation stack types
-type RootStackParamList = {
-  Login: undefined;
-  Main: undefined;
-  Profile: undefined;
-};
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { TouchableOpacity } from 'react-native';
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Define type for props passed to MainTabs
-type MainTabsProps = NativeStackScreenProps<RootStackParamList, 'Main'>;
-
-function MainTabs({ navigation }: MainTabsProps) {
+function MainTabs() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Profile')}
-            style={{ marginRight: 16 }}
-          >
-            <Ionicons name="person-circle-outline" size={28} color="#000" />
-          </TouchableOpacity>
-        ),
+      screenOptions={({ navigation, route }) => ({
+        headerRight: () =>
+          route.name !== 'Profile' && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Profile' as never)}
+              style={{ marginRight: 16 }}
+            >
+              <Ionicons name="person-circle-outline" size={28} color="#000" />
+            </TouchableOpacity>
+          ),
+        tabBarStyle: route.name === 'Profile' ? { display: 'none' } : undefined,
         tabBarIcon: ({ color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'ellipse-outline';
           switch (route.name) {
@@ -66,14 +61,32 @@ function MainTabs({ navigation }: MainTabsProps) {
       <Tab.Screen name="Behavioral" component={BehavioralScreen} />
       <Tab.Screen name="DSA" component={DSAScreen} />
       <Tab.Screen name="Challenges" component={ChallengesScreen} />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ tabBarButton: () => null }}
+      />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
+  const [initialRoute, setInitialRoute] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log(user ? `✅ Logged in as ${user.email}` : '🔒 Not signed in');
+      setInitialRoute(user ? 'Main' : 'Login');
+    });
+
+    return unsubscribe;
+  }, []);
+
+  if (!initialRoute) return null; // prevent flash before auth check completes
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
+      <Stack.Navigator initialRouteName={initialRoute}>
         <Stack.Screen
           name="Login"
           component={LoginScreen}
@@ -83,11 +96,6 @@ export default function App() {
           name="Main"
           component={MainTabs}
           options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{ title: 'Your Profile' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
