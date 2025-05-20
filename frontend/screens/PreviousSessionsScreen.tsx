@@ -12,6 +12,11 @@ import { useNavigation } from '@react-navigation/native';
 import { LineChart } from 'react-native-chart-kit';
 import axios from 'axios';
 import { auth } from '../services/firebase';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+    SessionDetail: { session: Session };
+};
 
 const API_BASE = 'http://localhost:8000';
 
@@ -21,13 +26,55 @@ interface Metric {
   overall_completeness: number;
 }
 
+interface StarSection {
+  response: string;
+  clarity_score: string;
+  completeness_score: string;
+}
+
+interface FeedbackResponse {
+  situation: StarSection;
+  task: StarSection;
+  action: StarSection;
+  result: StarSection;
+  overall_score: string;
+  feedback: string;
+}
+
+interface Session {
+  question: string;
+  timestamp: string;
+  feedback: FeedbackResponse;
+}
+
 export default function PreviousSessionsScreen() {
   const [view, setView] = useState<'sessions' | 'data'>('sessions');
   const [range, setRange] = useState<'7' | '30'>('7');
   const [metrics, setMetrics] = useState<Metric[]>([]);
+  const [sessions, setSessions] = useState<Session[]>([]);
   const { width } = useWindowDimensions();
   const isWideScreen = width > 800;
-  const navigation = useNavigation();
+
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const user = auth.currentUser;
+        const token = await user?.getIdToken();
+        const res = await axios.get<{ sessions: Session[] }>(`${API_BASE}/user/previous-sessions`, {
+          headers: { Authorization: token },
+        });
+        setSessions(res.data.sessions);
+      } catch (err) {
+        console.error('Error fetching sessions', err);
+      }
+    };
+
+    if (view === 'sessions') {
+      fetchSessions();
+    }
+  }, [view]);
 
   useEffect(() => {
     if (view === 'data') {
@@ -71,7 +118,22 @@ export default function PreviousSessionsScreen() {
         </View>
 
         {view === 'sessions' ? (
-          <View style={styles.content}><Text>List of previous sessions will go here</Text></View>
+          <View style={styles.content}>
+            {sessions.length > 0 ? (
+              sessions.map((session, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.sessionCard}
+                  onPress={() => navigation.navigate('SessionDetail', { session })}
+                >
+                  <Text style={styles.sessionQuestion}>{session.question}</Text>
+                  <Text style={styles.sessionDate}>{formatDate(session.timestamp)}</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text>No sessions found.</Text>
+            )}
+          </View>
         ) : (
           <View style={styles.content}>
             <View style={styles.rangeToggle}>
@@ -203,5 +265,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
+  },
+  sessionCard: {
+    width: '100%',
+    padding: 16,
+    marginVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#f9f9f9',
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
+  sessionQuestion: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  sessionDate: {
+    fontSize: 12,
+    color: '#666',
   },
 });
