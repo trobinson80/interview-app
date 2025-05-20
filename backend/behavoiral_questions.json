@@ -1,0 +1,161 @@
+{
+  "behavioral_questions": [
+    {
+      "id": 1,
+      "question": "Tell me about a time you had to work with a difficult teammate."
+    },
+    {
+      "id": 2,
+      "question": "Tell me about a time you made a mistake at work. How did you handle it?"
+    },
+    {
+      "id": 3,
+      "question": "Tell me about a time you disagreed with a decision made by your manager."
+    },
+    {
+      "id": 4,
+      "question": "Tell me about a time you had to learn something quickly to complete a task."
+    },
+    {
+      "id": 5,
+      "question": "Tell me about a time you received critical feedback. How did you respond?"
+    },
+    {
+      "id": 6,
+      "question": "Tell me about a time you had to debug a difficult issue."
+    },
+    {
+      "id": 7,
+      "question": "Tell me about a time when you had to balance multiple priorities."
+    },
+    {
+      "id": 8,
+      "question": "Tell me about a time you worked on a team project. What role did you play?"
+    },
+    {
+      "id": 9,
+      "question": "Tell me about a time you failed to meet a deadline."
+    },
+    {
+      "id": 10,
+      "question": "Tell me about a time when you had to deal with an unexpected challenge."
+    },
+    {
+      "id": 11,
+      "question": "Tell me about a time you had to make a trade-off between code quality and speed."
+    },
+    {
+      "id": 12,
+      "question": "Tell me about a time you had to communicate a complex technical concept to a non-technical audience."
+    },
+    {
+      "id": 13,
+      "question": "Tell me about a time you had to refactor legacy code."
+    },
+    {
+      "id": 14,
+      "question": "Tell me about a time you had to make a tough technical decision with limited data."
+    },
+    {
+      "id": 15,
+      "question": "Tell me about a time you took initiative on a project."
+    },
+    {
+      "id": 16,
+      "question": "Tell me about a time you mentored a teammate or junior engineer."
+    },
+    {
+      "id": 17,
+      "question": "Tell me about a time when a project didn’t go as planned. What did you do?"
+    },
+    {
+      "id": 18,
+      "question": "Tell me about a time you contributed to improving team processes."
+    },
+    {
+      "id": 19,
+      "question": "Tell me about a time you collaborated with cross-functional teams."
+    },
+    {
+      "id": 20,
+      "question": "Tell me about a time you had to say no to a stakeholder."
+    },
+    {
+      "id": 21,
+      "question": "Tell me about a time when your code caused a production issue."
+    },
+    {
+      "id": 22,
+      "question": "Tell me about a time you improved system performance."
+    },
+    {
+      "id": 23,
+      "question": "Tell me about a time you had to manage technical debt."
+    },
+    {
+      "id": 24,
+      "question": "Tell me about a time you built something from scratch."
+    },
+    {
+      "id": 25,
+      "question": "Tell me about a time you disagreed with an architectural decision."
+    },
+    {
+      "id": 26,
+      "question": "Tell me about a time you had to handle an on-call incident."
+    },
+    {
+      "id": 27,
+      "question": "Tell me about a time you had to prioritize between technical and business goals."
+    },
+    {
+      "id": 28,
+      "question": "Tell me about a time you had to deal with scope creep."
+    },
+    {
+      "id": 29,
+      "question": "Tell me about a time you challenged the status quo on your team."
+    },
+    {
+      "id": 30,
+      "question": "Tell me about a time you exceeded expectations on a project."
+    },
+    {
+      "id": 31,
+      "question": "Tell me about a time you missed something in a code review."
+    },
+    {
+      "id": 32,
+      "question": "Tell me about a time you automated a repetitive task."
+    },
+    {
+      "id": 33,
+      "question": "Tell me about a time you worked under tight deadlines."
+    },
+    { "id": 34, "question": "Tell me about a time your team depended on you." },
+    {
+      "id": 35,
+      "question": "Tell me about a time you had to compromise on your solution."
+    },
+    {
+      "id": 36,
+      "question": "Tell me about a time you made a significant impact on a project."
+    },
+    {
+      "id": 37,
+      "question": "Tell me about a time you discovered a major issue late in the development cycle."
+    },
+    {
+      "id": 38,
+      "question": "Tell me about a time you had to adapt to a new technology quickly."
+    },
+    {
+      "id": 39,
+      "question": "Tell me about a time you got stuck on a problem and how you resolved it."
+    },
+    {
+      "id": 40,
+      "question": "Tell me about a time you helped unblock someone else."
+    }
+  ]
+}
