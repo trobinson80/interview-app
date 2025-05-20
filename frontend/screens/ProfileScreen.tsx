@@ -8,13 +8,14 @@ import {
   useWindowDimensions,
   Platform,
 } from 'react-native';
+import { saveUserProfile } from '../services/userApi';
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
   const isWideScreen = width > 600;
 
   const [name, setName] = useState('');
-  const email = 'user@example.com';
+  const email = 'user@example.com'; // This could be populated from Firebase auth if needed
 
   const [experience, setExperience] = useState('');
   const [goal, setGoal] = useState('');
@@ -34,6 +35,16 @@ export default function ProfileScreen() {
     setTracks(prev =>
       prev.includes(track) ? prev.filter(t => t !== track) : [...prev, track]
     );
+  };
+
+  const handleSave = async () => {
+    try {
+      await saveUserProfile({ name, email, experience, goal, tracks });
+      alert('Profile updated!');
+    } catch (err) {
+      console.error('Profile update failed:', err);
+      alert('Error updating profile.');
+    }
   };
 
   return (
@@ -120,6 +131,10 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+          <Text style={styles.saveButtonText}>Update</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -202,5 +217,17 @@ const styles = StyleSheet.create({
   },
   pillTextSelected: {
     color: '#fff',
+  },
+  saveButton: {
+    marginTop: 24,
+    backgroundColor: '#007bff',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
