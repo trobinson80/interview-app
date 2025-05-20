@@ -13,11 +13,18 @@ import {
 import MascotBot from '../components/MascotBot';
 import axios from 'axios';
 import { auth } from '../services/firebase';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { BehavioralStackParamList } from '../navigation/types';
 
 const API_BASE = 'http://localhost:8000';
 
+type NavigationProp = NativeStackNavigationProp<BehavioralStackParamList>;
+
 interface QuestionResponse {
   question: string;
+  id: string;
+  session_id: string;
 }
 
 interface StarSection {
@@ -37,6 +44,8 @@ interface FeedbackResponse {
 
 export default function BehavioralScreen() {
   const [question, setQuestion] = useState('');
+  const [questionId, setQuestionId] = useState('');
+  const [sessionId, setSessionId] = useState('');
   const [answer, setAnswer] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -44,6 +53,7 @@ export default function BehavioralScreen() {
   const [feedback, setFeedback] = useState<FeedbackResponse | null>(null);
   const { width } = useWindowDimensions();
   const isWideScreen = width > 600;
+  const navigation = useNavigation<NavigationProp>();
 
   const startSession = async () => {
     setLoading(true);
@@ -58,6 +68,8 @@ export default function BehavioralScreen() {
         headers: { Authorization: token },
       });
       setQuestion(res.data.question);
+      setQuestionId(res.data.id);
+      setSessionId(res.data.session_id);
     } catch (err) {
       console.error('Failed to fetch question:', err);
     }
@@ -72,7 +84,7 @@ export default function BehavioralScreen() {
 
       const res = await axios.post<FeedbackResponse>(
         `${API_BASE}/user/answer`,
-        { question, answer },
+        { question, answer, session_id: sessionId },
         { headers: { Authorization: token } }
       );
       setFeedback(res.data);
@@ -111,38 +123,47 @@ export default function BehavioralScreen() {
                 onChangeText={setAnswer}
                 multiline
                 placeholder="Type your answer here..."
+                editable={!submitted}
               />
 
-              <TouchableOpacity
-                style={[styles.button, submitting && { backgroundColor: '#ccc' }]}
-                onPress={submitAnswer}
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Submit Answer</Text>
-                )}
-              </TouchableOpacity>
+              {!submitted && (
+                <TouchableOpacity
+                  style={[styles.button, submitting && { backgroundColor: '#ccc' }]}
+                  onPress={submitAnswer}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Submit Answer</Text>
+                  )}
+                </TouchableOpacity>
+              )}
 
               {submitted && feedback && (
-                <View style={styles.feedbackBox}>
-                  <Text style={styles.feedbackHeader}>Feedback</Text>
-                  {starKeys.map((key) => {
-                    const section = feedback[key];
-                    return (
-                      <View key={key} style={{ marginBottom: 10 }}>
-                        <Text style={styles.starTitle}>{key.toUpperCase()}</Text>
-                        <Text>{section.response}</Text>
-                        <Text style={styles.scoreText}>
-                          Clarity: {section.clarity_score} | Completeness: {section.completeness_score}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                  <Text style={styles.overallScore}>📊 Overall Score: {feedback.overall_score}</Text>
-                  <Text style={styles.feedbackSummary}>{feedback.feedback}</Text>
-                </View>
+                <>
+                  <View style={styles.feedbackBox}>
+                    <Text style={styles.feedbackHeader}>Feedback</Text>
+                    {starKeys.map((key) => {
+                      const section = feedback[key];
+                      return (
+                        <View key={key} style={{ marginBottom: 10 }}>
+                          <Text style={styles.starTitle}>{key.toUpperCase()}</Text>
+                          <Text>{section.response}</Text>
+                          <Text style={styles.scoreText}>
+                            Clarity: {section.clarity_score} | Completeness: {section.completeness_score}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                    <Text style={styles.overallScore}>📊 Overall Score: {feedback.overall_score}</Text>
+                    <Text style={styles.feedbackSummary}>{feedback.feedback}</Text>
+                  </View>
+
+                  <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('PreviousSessions')}>
+                    <Text style={styles.buttonText}>View Previous Sessions</Text>
+                  </TouchableOpacity>
+                </>
               )}
             </>
           )}
