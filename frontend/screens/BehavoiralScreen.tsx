@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   useWindowDimensions,
   Platform,
+  ScrollView,
 } from 'react-native';
 import MascotBot from '../components/MascotBot';
 import axios from 'axios';
@@ -19,22 +20,28 @@ interface QuestionResponse {
   question: string;
 }
 
+interface StarSection {
+  response: string;
+  clarity_score: string;
+  completeness_score: string;
+}
+
 interface FeedbackResponse {
-  feedback: {
-    situation: string;
-    task: string;
-    action: string;
-    result: string;
-    overall_score: number;
-  };
+  situation: StarSection;
+  task: StarSection;
+  action: StarSection;
+  result: StarSection;
+  overall_score: string;
+  feedback: string;
 }
 
 export default function BehavioralScreen() {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [feedback, setFeedback] = useState<FeedbackResponse['feedback'] | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackResponse | null>(null);
   const { width } = useWindowDimensions();
   const isWideScreen = width > 600;
 
@@ -58,6 +65,7 @@ export default function BehavioralScreen() {
   };
 
   const submitAnswer = async () => {
+    setSubmitting(true);
     try {
       const user = auth.currentUser;
       const token = await user?.getIdToken();
@@ -67,15 +75,18 @@ export default function BehavioralScreen() {
         { question, answer },
         { headers: { Authorization: token } }
       );
-      setFeedback(res.data.feedback);
+      setFeedback(res.data);
       setSubmitted(true);
     } catch (err) {
       console.error('Failed to submit answer:', err);
     }
+    setSubmitting(false);
   };
 
+  const starKeys: (keyof Pick<FeedbackResponse, 'situation' | 'task' | 'action' | 'result'>)[] = ['situation', 'task', 'action', 'result'];
+
   return (
-    <View style={styles.screenWrapper}>
+    <ScrollView contentContainerStyle={styles.screenWrapper}>
       <View style={styles.outer}>
         <View style={[styles.inner, isWideScreen && styles.innerWide]}>
           <Text style={styles.text}>Behavioral Practice</Text>
@@ -102,25 +113,36 @@ export default function BehavioralScreen() {
                 placeholder="Type your answer here..."
               />
 
-              <TouchableOpacity style={styles.button} onPress={submitAnswer}>
-                <Text style={styles.buttonText}>Submit Answer</Text>
+              <TouchableOpacity
+                style={[styles.button, submitting && { backgroundColor: '#ccc' }]}
+                onPress={submitAnswer}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Submit Answer</Text>
+                )}
               </TouchableOpacity>
 
-              {submitted && (
-                <>
-                  <Text style={styles.confirmation}>✅ Answer submitted!</Text>
-
-                  {feedback && (
-                    <View style={styles.feedbackBox}>
-                      <Text style={styles.feedbackHeader}>Feedback</Text>
-                      <Text>🧩 Situation: {feedback.situation}</Text>
-                      <Text>🎯 Task: {feedback.task}</Text>
-                      <Text>⚙️ Action: {feedback.action}</Text>
-                      <Text>🏁 Result: {feedback.result}</Text>
-                      <Text>📊 Overall Score: {feedback.overall_score}/10</Text>
-                    </View>
-                  )}
-                </>
+              {submitted && feedback && (
+                <View style={styles.feedbackBox}>
+                  <Text style={styles.feedbackHeader}>Feedback</Text>
+                  {starKeys.map((key) => {
+                    const section = feedback[key];
+                    return (
+                      <View key={key} style={{ marginBottom: 10 }}>
+                        <Text style={styles.starTitle}>{key.toUpperCase()}</Text>
+                        <Text>{section.response}</Text>
+                        <Text style={styles.scoreText}>
+                          Clarity: {section.clarity_score} | Completeness: {section.completeness_score}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                  <Text style={styles.overallScore}>📊 Overall Score: {feedback.overall_score}</Text>
+                  <Text style={styles.feedbackSummary}>{feedback.feedback}</Text>
+                </View>
               )}
             </>
           )}
@@ -139,13 +161,13 @@ export default function BehavioralScreen() {
           ]}
         />
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   screenWrapper: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#f4f4f4',
   },
   outer: {
@@ -208,11 +230,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     width: '100%',
   },
-  confirmation: {
-    marginTop: 12,
-    color: 'green',
-    textAlign: 'center',
-  },
   feedbackBox: {
     backgroundColor: '#f0f8ff',
     padding: 16,
@@ -223,6 +240,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     fontSize: 16,
+  },
+  starTitle: {
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  scoreText: {
+    fontSize: 12,
+    color: '#555',
+  },
+  overallScore: {
+    marginTop: 10,
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  feedbackSummary: {
+    marginTop: 8,
+    fontSize: 13,
+    color: '#333',
   },
   mascotWrapper: {
     position: 'absolute',
