@@ -3,6 +3,27 @@ import { auth } from './firebase';
 
 const API_BASE = 'http://localhost:8000';
 
+export type UserProfile = {
+  name: string;
+  email: string;
+  experience: string;
+  goal: string;
+  tracks: string[];
+};
+
+export const getUserProfile = async (): Promise<UserProfile> => {
+  const user = auth.currentUser;
+  if (!user) throw new Error('User not authenticated');
+
+  const token = await user.getIdToken();
+
+  const res = await axios.get<UserProfile>(`${API_BASE}/user/profile`, {
+    headers: { Authorization: token },
+  });
+
+  return res.data;
+};
+
 export const saveUserProfile = async (profileData: {
   name: string;
   email: string;

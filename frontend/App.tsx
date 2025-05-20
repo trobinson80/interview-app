@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Provider as PaperProvider } from 'react-native-paper';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 import { auth } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -11,10 +15,7 @@ import BehavioralScreen from './screens/BehavoiralScreen';
 import DSAScreen from './screens/DSAScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import ChallengesScreen from './screens/ChallengesScreen';
-
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { TouchableOpacity } from 'react-native';
+import ProfileMenuButton from './components/ProfileMenuButton';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -25,12 +26,7 @@ function MainTabs() {
       screenOptions={({ navigation, route }) => ({
         headerRight: () =>
           route.name !== 'Profile' && (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Profile' as never)}
-              style={{ marginRight: 16 }}
-            >
-              <Ionicons name="person-circle-outline" size={28} color="#000" />
-            </TouchableOpacity>
+            <ProfileMenuButton />
           ),
         tabBarStyle: route.name === 'Profile' ? { display: 'none' } : undefined,
         tabBarIcon: ({ color, size }) => {
@@ -82,22 +78,24 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  if (!initialRoute) return null; // prevent flash before auth check completes
+  if (!initialRoute) return null;
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName={initialRoute}>
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Main"
-          component={MainTabs}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <PaperProvider>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName={initialRoute}>
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Main"
+            component={MainTabs}
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </PaperProvider>
   );
 }
