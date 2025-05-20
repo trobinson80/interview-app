@@ -1,13 +1,56 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, Platform, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  useWindowDimensions,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { LineChart } from 'react-native-chart-kit';
+import axios from 'axios';
+import { auth } from '../services/firebase';
+
+const API_BASE = 'http://localhost:8000';
+
+interface Metric {
+  timestamp: string;
+  overall_clarity: number;
+  overall_completeness: number;
+}
 
 export default function PreviousSessionsScreen() {
   const [view, setView] = useState<'sessions' | 'data'>('sessions');
   const [range, setRange] = useState<'7' | '30'>('7');
+  const [metrics, setMetrics] = useState<Metric[]>([]);
   const { width } = useWindowDimensions();
   const isWideScreen = width > 800;
   const navigation = useNavigation();
+
+  useEffect(() => {
+    if (view === 'data') {
+      const fetchMetrics = async () => {
+        try {
+          const user = auth.currentUser;
+          const token = await user?.getIdToken();
+          const res = await axios.get<{ metrics: Metric[] }>(`${API_BASE}/user/session-metrics`, {
+            params: { days: range },
+            headers: { Authorization: token },
+          });
+          setMetrics(res.data.metrics);
+        } catch (err) {
+          console.error('Error fetching metrics', err);
+        }
+      };
+      fetchMetrics();
+    }
+  }, [view, range]);
+
+  const formatDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleDateString();
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -45,7 +88,47 @@ export default function PreviousSessionsScreen() {
                 <Text style={styles.rangeText}>Last 30 Days</Text>
               </TouchableOpacity>
             </View>
-            <Text>Line chart placeholder ({range}-day view)</Text>
+            {metrics.length > 0 ? (
+              <View style={styles.chartContainer}>
+                <LineChart
+                  data={{
+                    labels: metrics.map(m => formatDate(m.timestamp)),
+                    datasets: [
+                      {
+                        data: metrics.map(m => m.overall_clarity || 0),
+                        color: () => '#007bff',
+                        strokeWidth: 2,
+                      },
+                      {
+                        data: metrics.map(m => m.overall_completeness || 0),
+                        color: () => '#28a745',
+                        strokeWidth: 2,
+                      },
+                    ],
+                    legend: ['Clarity', 'Completeness'],
+                  }}
+                  width={isWideScreen ? 640 : width - 64}
+                  height={240}
+                  yAxisSuffix=""
+                  chartConfig={{
+                    backgroundGradientFrom: '#ffffff',
+                    backgroundGradientTo: '#ffffff',
+                    decimalPlaces: 2,
+                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                    propsForDots: {
+                      r: '4',
+                      strokeWidth: '2',
+                      stroke: '#007bff',
+                    },
+                  }}
+                  bezier
+                  style={{ borderRadius: 8 }}
+                />
+              </View>
+            ) : (
+              <Text>No data available</Text>
+            )}
           </View>
         )}
       </View>
@@ -114,5 +197,11 @@ const styles = StyleSheet.create({
   },
   rangeText: {
     fontWeight: '600',
+  },
+  chartContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
   },
 });
