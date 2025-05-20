@@ -5,7 +5,8 @@ import os
 import json
 from feedback_loop import evaluate_response
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timedelta
+from fastapi import Query
 
 router = APIRouter()
 QUESTIONS_FILE = os.path.join(os.path.dirname(__file__), '../behavoiral_questions.json')
@@ -136,3 +137,22 @@ def handle_behavioral_answer(payload: AnswerSubmission, request: Request):
     db.collection("users").document(uid).collection("behavioral_answers").document(payload.session_id).set(session_data)
 
     return feedback
+
+@router.get("/session-metrics")
+def get_session_metrics(request: Request, days: int = Query(7)):
+    uid = verify_token(request.headers.get("Authorization"))
+    cutoff = datetime.utcnow() - timedelta(days=days)
+
+    sessions_ref = db.collection("users").document(uid).collection("behavioral_answers")
+    docs = sessions_ref.where("timestamp", ">=", cutoff.isoformat()).stream()
+
+    results = []
+    for doc in docs:
+        data = doc.to_dict()
+        results.append({
+            "timestamp": data.get("timestamp"),
+            "overall_clarity": data.get("overall_clarity"),
+            "overall_completeness": data.get("overall_completeness"),
+        })
+
+    return { "metrics": results }
