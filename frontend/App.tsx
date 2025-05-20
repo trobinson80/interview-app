@@ -16,6 +16,7 @@ import DSAScreen from './screens/DSAScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import ChallengesScreen from './screens/ChallengesScreen';
 import ProfileMenuButton from './components/ProfileMenuButton';
+import BehavioralStack from './navigation/BehavoiralStack';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -54,7 +55,7 @@ function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="System Design" component={SystemDesignScreen} />
-      <Tab.Screen name="Behavioral" component={BehavioralScreen} />
+      <Tab.Screen name="Behavioral" component={BehavioralStack} />
       <Tab.Screen name="DSA" component={DSAScreen} />
       <Tab.Screen name="Challenges" component={ChallengesScreen} />
       <Tab.Screen
