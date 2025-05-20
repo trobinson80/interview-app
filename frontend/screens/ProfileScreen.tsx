@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,17 @@ import {
   useWindowDimensions,
   Platform,
 } from 'react-native';
-import { saveUserProfile } from '../services/userApi';
+import { getUserProfile, saveUserProfile } from '../services/userApi';
+import { auth } from '../services/firebase';
+import { useNavigation } from '@react-navigation/native';
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
   const isWideScreen = width > 600;
+  const navigation = useNavigation();
 
   const [name, setName] = useState('');
-  const email = 'user@example.com'; // This could be populated from Firebase auth if needed
-
+  const [email, setEmail] = useState('');
   const [experience, setExperience] = useState('');
   const [goal, setGoal] = useState('');
   const [tracks, setTracks] = useState<string[]>([]);
@@ -30,6 +32,23 @@ export default function ProfileScreen() {
     'Build interview confidence',
   ];
   const trackOptions = ['System Design', 'Behavioral', 'DSA'];
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile = await getUserProfile();
+        setName(profile.name || '');
+        setEmail(profile.email || auth.currentUser?.email || '');
+        setExperience(profile.experience || '');
+        setGoal(profile.goal || '');
+        setTracks(profile.tracks || []);
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   const toggleTrack = (track: string) => {
     setTracks(prev =>
@@ -50,7 +69,12 @@ export default function ProfileScreen() {
   return (
     <View style={styles.outer}>
       <View style={[styles.inner, isWideScreen && styles.innerWide]}>
-        <Text style={styles.header}>Profile</Text>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.header}>Profile</Text>
+        </View>
 
         <Text style={styles.label}>Name</Text>
         <TextInput
@@ -164,11 +188,21 @@ const styles = StyleSheet.create({
     maxWidth: 500,
     padding: 32,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  backButton: {
+    marginRight: 12,
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: '#007bff',
+  },
   header: {
     fontSize: 28,
     fontWeight: '600',
-    marginBottom: 24,
-    textAlign: 'center',
   },
   label: {
     fontSize: 16,
