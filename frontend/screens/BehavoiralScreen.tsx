@@ -19,11 +19,22 @@ interface QuestionResponse {
   question: string;
 }
 
+interface FeedbackResponse {
+  feedback: {
+    situation: string;
+    task: string;
+    action: string;
+    result: string;
+    overall_score: number;
+  };
+}
+
 export default function BehavioralScreen() {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [feedback, setFeedback] = useState<FeedbackResponse['feedback'] | null>(null);
   const { width } = useWindowDimensions();
   const isWideScreen = width > 600;
 
@@ -31,6 +42,7 @@ export default function BehavioralScreen() {
     setLoading(true);
     setAnswer('');
     setSubmitted(false);
+    setFeedback(null);
     try {
       const user = auth.currentUser;
       const token = await user?.getIdToken();
@@ -50,11 +62,12 @@ export default function BehavioralScreen() {
       const user = auth.currentUser;
       const token = await user?.getIdToken();
 
-      await axios.post(
-        `${API_BASE}/behavioral/answer`,
+      const res = await axios.post<FeedbackResponse>(
+        `${API_BASE}/user/answer`,
         { question, answer },
         { headers: { Authorization: token } }
       );
+      setFeedback(res.data.feedback);
       setSubmitted(true);
     } catch (err) {
       console.error('Failed to submit answer:', err);
@@ -93,7 +106,22 @@ export default function BehavioralScreen() {
                 <Text style={styles.buttonText}>Submit Answer</Text>
               </TouchableOpacity>
 
-              {submitted && <Text style={styles.confirmation}>✅ Answer submitted!</Text>}
+              {submitted && (
+                <>
+                  <Text style={styles.confirmation}>✅ Answer submitted!</Text>
+
+                  {feedback && (
+                    <View style={styles.feedbackBox}>
+                      <Text style={styles.feedbackHeader}>Feedback</Text>
+                      <Text>🧩 Situation: {feedback.situation}</Text>
+                      <Text>🎯 Task: {feedback.task}</Text>
+                      <Text>⚙️ Action: {feedback.action}</Text>
+                      <Text>🏁 Result: {feedback.result}</Text>
+                      <Text>📊 Overall Score: {feedback.overall_score}/10</Text>
+                    </View>
+                  )}
+                </>
+              )}
             </>
           )}
         </View>
@@ -184,6 +212,17 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: 'green',
     textAlign: 'center',
+  },
+  feedbackBox: {
+    backgroundColor: '#f0f8ff',
+    padding: 16,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  feedbackHeader: {
+    fontWeight: 'bold',
+    marginBottom: 10,
+    fontSize: 16,
   },
   mascotWrapper: {
     position: 'absolute',
