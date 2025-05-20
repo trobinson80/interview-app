@@ -3,9 +3,16 @@ from models.user import UserProfile
 from firebase import verify_token, db
 import os
 import json
+from feedback_loop import evaluate_response
+from pydantic import BaseModel
+from datetime import datetime
 
 router = APIRouter()
 QUESTIONS_FILE = os.path.join(os.path.dirname(__file__), '../behavoiral_questions.json')
+
+class AnswerSubmission(BaseModel):
+    question: str
+    answer: str
 
 def get_uid(request: Request):
     token = request.headers.get("Authorization")
@@ -72,3 +79,20 @@ def get_behavioral_question(request: Request):
             return { "question": q["question"], "id": q["id"] }
 
     raise HTTPException(status_code=404, detail="No more unseen questions available")
+
+@router.post("/answer")
+def submit_behavioral_answer(data: AnswerSubmission, request: Request):
+    uid = verify_token(request.headers.get("Authorization"))
+
+    print(f"[POST /answer] UID: {uid}, Question: {data.question}")
+    feedback = evaluate_response(data.answer)
+
+    # Optionally save the answer and feedback to Firestore
+    db.collection("users").document(uid).collection("behavioral_answers").document(data.question).set({
+        "question": data.question,
+        "answer": data.answer,
+        "feedback": feedback,
+        "timestamp": datetime.utcnow()
+    })
+    print(feedback)
+    return { "feedback": feedback }
