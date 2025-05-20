@@ -81,18 +81,24 @@ def get_behavioral_question(request: Request):
     raise HTTPException(status_code=404, detail="No more unseen questions available")
 
 @router.post("/answer")
-def submit_behavioral_answer(data: AnswerSubmission, request: Request):
+def handle_behavioral_answer(payload: AnswerSubmission, request: Request):
     uid = verify_token(request.headers.get("Authorization"))
 
-    print(f"[POST /answer] UID: {uid}, Question: {data.question}")
-    feedback = evaluate_response(data.answer)
+    print(f"[POST /behavioral/answer] User: {uid}")
+    print(f"[POST /behavioral/answer] Question: {payload.question}")
+    
+    feedback = evaluate_response(payload.question, payload.answer)
 
-    # Optionally save the answer and feedback to Firestore
-    db.collection("users").document(uid).collection("behavioral_answers").document(data.question).set({
-        "question": data.question,
-        "answer": data.answer,
+    print(f"[POST /behavioral/answer] Feedback generated.")
+
+    # Save answer with timestamp
+    doc_ref = db.collection("users").document(uid).collection("behavioral_answers").document()
+    doc_ref.set({
+        "question": payload.question,
+        "answer": payload.answer,
         "feedback": feedback,
-        "timestamp": datetime.utcnow()
+        "timestamp": datetime.utcnow().isoformat()
     })
     print(feedback)
-    return { "feedback": feedback }
+
+    return feedback
