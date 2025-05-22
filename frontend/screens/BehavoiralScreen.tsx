@@ -64,6 +64,8 @@ export default function BehavioralScreen() {
   const navigation = useNavigation<NavigationProp>();
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const recognitionRef = useRef<any>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isRecording) {
@@ -117,6 +119,25 @@ export default function BehavioralScreen() {
     return true;
   };
 
+  const stopWebRecognition = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+      setIsRecording(false);
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
+  const resetInactivityTimeout = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      stopWebRecognition();
+    }, 10000);
+  };
+
   const startWebRecognition = () => {
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -127,29 +148,51 @@ export default function BehavioralScreen() {
     }
 
     const recognition = new SpeechRecognition();
+    recognition.continuous = true; // <--- Force continuous mode
     recognition.lang = 'en-US';
-    recognition.interimResults = false;
+    recognition.interimResults = true; // <--- capture real-time results
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setAnswer(transcript);
-      setIsRecording(false);
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        }
+      }
+      if (finalTranscript.trim()) {
+        setAnswer(prev => prev + ' ' + finalTranscript.trim());
+        resetInactivityTimeout();
+      }
     };
 
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error', event.error);
-      setIsRecording(false);
+      stopWebRecognition();
     };
 
-    recognition.onstart = () => setIsRecording(true);
-    recognition.onend = () => setIsRecording(false);
+    recognition.onstart = () => {
+      setIsRecording(true);
+      resetInactivityTimeout();
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
 
     recognition.start();
+    recognitionRef.current = recognition;
+    recognitionRef.current = recognition;
   };
 
   const handleMicPress = async () => {
     if (isWeb) {
-      startWebRecognition();
+      if (isRecording) {
+        stopWebRecognition();
+      } else {
+        startWebRecognition();
+      }
       return;
     }
 
