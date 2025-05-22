@@ -77,23 +77,29 @@ def get_behavioral_question(request: Request):
     seen_docs = db.collection('users').document(uid).collection('behavioral_answers').stream()
     seen_questions = set(doc.id for doc in seen_docs)
 
-    for q in all_questions:
-        if q["id"] not in seen_questions:
-            question_id = q["id"]
-            session_doc = db.collection("users").document(uid).collection("behavioral_sessions").document()
-            session_doc.set({
-                "question_id": question_id,
-                "question": q["question"],
-                "timestamp": datetime.utcnow().isoformat(),
-                "status": "in_progress"
-            })
-            return {
-                "question": q["question"],
-                "id": question_id,
-                "session_id": session_doc.id
-            }
+    unseen_questions = [q for q in all_questions if q["id"] not in seen_questions]
 
-    raise HTTPException(status_code=404, detail="No more unseen questions available")
+    if not unseen_questions:
+        raise HTTPException(status_code=404, detail="No more unseen questions available")
+
+    # 🌀 Pick one at random
+    import random
+    q = random.choice(unseen_questions)
+    question_id = q["id"]
+
+    session_doc = db.collection("users").document(uid).collection("behavioral_sessions").document()
+    session_doc.set({
+        "question_id": question_id,
+        "question": q["question"],
+        "timestamp": datetime.utcnow().isoformat(),
+        "status": "in_progress"
+    })
+
+    return {
+        "question": q["question"],
+        "id": question_id,
+        "session_id": session_doc.id
+    }
 
 
 @router.post("/answer")
