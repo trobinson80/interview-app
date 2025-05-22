@@ -161,7 +161,9 @@ export default function BehavioralScreen() {
         }
       }
       if (finalTranscript.trim()) {
-        setAnswer(prev => prev + ' ' + finalTranscript.trim());
+        setAnswer(prev => prev.trim().length === 0
+          ? finalTranscript.trim()
+          : prev.trim() + '. ' + finalTranscript.trim());
         resetInactivityTimeout();
       }
     };
