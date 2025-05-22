@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
   Platform,
   ScrollView,
+  PermissionsAndroid,
 } from 'react-native';
 import MascotBot from '../components/MascotBot';
 import axios from 'axios';
@@ -16,8 +17,10 @@ import { auth } from '../services/firebase';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BehavioralStackParamList } from '../navigation/types';
+import Voice from '@react-native-voice/voice';
 
 const API_BASE = 'http://localhost:8000';
+const isWeb = Platform.OS === 'web';
 
 type NavigationProp = NativeStackNavigationProp<BehavioralStackParamList>;
 
@@ -51,9 +54,96 @@ export default function BehavioralScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackResponse | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+
   const { width } = useWindowDimensions();
   const isWideScreen = width > 600;
   const navigation = useNavigation<NavigationProp>();
+
+  useEffect(() => {
+    if (!isWeb) {
+      Voice.onSpeechResults = (e) => {
+        if (e.value && e.value[0]) {
+          setAnswer(e.value[0]);
+        }
+      };
+      Voice.onSpeechError = (e) => {
+        console.error('Voice error:', e);
+      };
+
+      return () => {
+        Voice.destroy().then(Voice.removeAllListeners);
+      };
+    }
+  }, []);
+
+  const requestPermissions = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+      ]);
+      return (
+        granted['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
+      );
+    }
+    return true; // iOS or web handled via Info.plist or browser prompt
+  };
+
+  const startWebRecognition = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert('Speech recognition not supported in this browser.');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setAnswer(transcript);
+      setIsRecording(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error', event.error);
+      setIsRecording(false);
+    };
+
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+
+    recognition.start();
+  };
+
+  const handleMicPress = async () => {
+    if (isWeb) {
+      startWebRecognition();
+      return;
+    }
+
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      console.warn('Microphone permission denied');
+      return;
+    }
+
+    if (isRecording) {
+      await Voice.stop();
+      setIsRecording(false);
+    } else {
+      try {
+        setAnswer('');
+        await Voice.start('en-US');
+        setIsRecording(true);
+      } catch (e) {
+        console.error('Failed to start voice recognition:', e);
+      }
+    }
+  };
 
   const startSession = async () => {
     setLoading(true);
@@ -117,27 +207,39 @@ export default function BehavioralScreen() {
                 <Text style={styles.questionText}>{question}</Text>
               </View>
 
-              <TextInput
-                style={styles.textArea}
-                value={answer}
-                onChangeText={setAnswer}
-                multiline
-                placeholder="Type your answer here..."
-                editable={!submitted}
-              />
-
               {!submitted && (
-                <TouchableOpacity
-                  style={[styles.button, submitting && { backgroundColor: '#ccc' }]}
-                  onPress={submitAnswer}
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.buttonText}>Submit Answer</Text>
-                  )}
+                <TouchableOpacity style={styles.button} onPress={handleMicPress}>
+                  <Text style={styles.buttonText}>
+                    {isRecording ? '🛑 Stop Recording' : '🎤 Speak Answer'}
+                  </Text>
                 </TouchableOpacity>
+              )}
+
+              {answer !== '' && (
+                <>
+                  <TextInput
+                    style={styles.textArea}
+                    value={answer}
+                    onChangeText={setAnswer}
+                    multiline
+                    placeholder="Your answer..."
+                    editable={!submitted}
+                  />
+
+                  {!submitted && (
+                    <TouchableOpacity
+                      style={[styles.button, submitting && { backgroundColor: '#ccc' }]}
+                      onPress={submitAnswer}
+                      disabled={submitting}
+                    >
+                      {submitting ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <Text style={styles.buttonText}>Submit Answer</Text>
+                      )}
+                    </TouchableOpacity>
+                  )}
+                </>
               )}
 
               {submitted && feedback && (
