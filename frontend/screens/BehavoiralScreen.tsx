@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Platform,
   ScrollView,
   PermissionsAndroid,
+  Animated,
+  Easing,
 } from 'react-native';
 import MascotBot from '../components/MascotBot';
 import axios from 'axios';
@@ -18,6 +20,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BehavioralStackParamList } from '../navigation/types';
 import Voice from '@react-native-voice/voice';
+import { FontAwesome } from '@expo/vector-icons';
 
 const API_BASE = 'http://localhost:8000';
 const isWeb = Platform.OS === 'web';
@@ -60,6 +63,31 @@ export default function BehavioralScreen() {
   const isWideScreen = width > 600;
   const navigation = useNavigation<NavigationProp>();
 
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isRecording) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.2,
+            duration: 500,
+            useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
+          }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isRecording]);
+
   useEffect(() => {
     if (!isWeb) {
       Voice.onSpeechResults = (e) => {
@@ -86,7 +114,7 @@ export default function BehavioralScreen() {
         granted['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
       );
     }
-    return true; // iOS or web handled via Info.plist or browser prompt
+    return true;
   };
 
   const startWebRecognition = () => {
@@ -208,11 +236,11 @@ export default function BehavioralScreen() {
               </View>
 
               {!submitted && (
-                <TouchableOpacity style={styles.button} onPress={handleMicPress}>
-                  <Text style={styles.buttonText}>
-                    {isRecording ? '🛑 Stop Recording' : '🎤 Speak Answer'}
-                  </Text>
-                </TouchableOpacity>
+                <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                  <TouchableOpacity style={styles.micButton} onPress={handleMicPress}>
+                    <FontAwesome name="microphone" size={28} color="#fff" />
+                  </TouchableOpacity>
+                </Animated.View>
               )}
 
               {answer !== '' && (
@@ -332,6 +360,16 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: '600',
+  },
+  micButton: {
+    backgroundColor: '#007bff',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginTop: 20,
   },
   questionBubble: {
     backgroundColor: '#e0e0ff',
