@@ -18,7 +18,10 @@ type RootStackParamList = {
     SessionDetail: { session: Session };
 };
 
-const API_BASE = 'http://localhost:8000';
+import Constants from 'expo-constants';
+
+// const API_BASE = 'http://localhost:8000';
+const API_BASE = Constants.expoConfig?.extra?.apiBase ?? '';
 
 interface Metric {
   timestamp: string;
