@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { auth } from './firebase';
+import Constants from 'expo-constants';
 
-const API_BASE = 'http://localhost:8000';
-
+// const API_BASE = 'http://localhost:8000';
+const API_BASE = Constants.expoConfig?.extra?.apiBase ?? '';
 export type UserProfile = {
   name: string;
   email: string;

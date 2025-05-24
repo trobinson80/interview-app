@@ -21,8 +21,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BehavioralStackParamList } from '../navigation/types';
 import Voice from '@react-native-voice/voice';
 import { FontAwesome } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 
-const API_BASE = 'http://localhost:8000';
+// const API_BASE = 'http://localhost:8000';
+const API_BASE = Constants.expoConfig?.extra?.apiBase ?? '';
 const isWeb = Platform.OS === 'web';
 
 type NavigationProp = NativeStackNavigationProp<BehavioralStackParamList>;
