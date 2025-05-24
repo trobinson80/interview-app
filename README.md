@@ -3,7 +3,8 @@
 # Backend
 
 cd backend
-uvicorn main:app --reload
+source venv/bin/activate # start virtual environment
+uvicorn main:app --reload # run backend
 
 # Frontend
 
