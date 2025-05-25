@@ -28,6 +28,9 @@ jobs:
           npm install --legacy-peer-deps
           npm run build
 
+      - name: 🧪 Show contents of dist
+        run: ls -R frontend/dist
+
       - name: 🚀 Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
