@@ -8,7 +8,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy entire project (including credentials if written during CI)
 COPY . .
 
-# Set environment variable so firebase.py can find the credentials
+# Copy the credentials file from CI context into the image
+COPY credentials/firebaseServiceAccount.json ./credentials/firebaseServiceAccount.json
+
+# Set the env var for Firebase init
 ENV FIREBASE_ADMIN_CREDENTIALS=./credentials/firebaseServiceAccount.json
 ENV PYTHONUNBUFFERED=1
 
