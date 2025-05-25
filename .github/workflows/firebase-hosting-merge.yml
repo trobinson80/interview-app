@@ -26,6 +26,7 @@ jobs:
         run: |
           cd frontend
           npm install --legacy-peer-deps
+          API_BASE=${{ secrets.API_BASE }}
           npm run build
 
       - name: 🚀 Deploy to Firebase Hosting
