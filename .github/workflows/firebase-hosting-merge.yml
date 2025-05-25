@@ -18,7 +18,7 @@ jobs:
       - name: 📝 Recreate firebase config file
         run: |
           mkdir -p frontend/services
-          cat <<EOF > frontend/services/firebase.js
+          cat <<EOF > frontend/services/firebase.ts
           ${{ secrets.FIREBASE_JS_CONFIG }}
           EOF
 
@@ -35,3 +35,4 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_INTERVIEW_APP_48D25 }}
           channelId: live
           projectId: interview-app-48d25
+          entryPoint: frontend
