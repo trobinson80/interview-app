@@ -18,7 +18,7 @@ jobs:
       - name: 📝 Recreate firebase config
         run: |
           mkdir -p frontend/services
-          echo "${{ secrets.FIREBASE_JS_CONFIG }}" > frontend/services/firebase.js
+          echo "${{ secrets.FIREBASE_JS_CONFIG }}" > frontend/services/firebase.ts
 
       - name: 🔧 Install & Build Frontend
         run: |
