@@ -15,10 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 📝 Recreate firebase config
+      - name: 📝 Recreate firebase config file
         run: |
           mkdir -p frontend/services
-          echo "${{ secrets.FIREBASE_JS_CONFIG }}" > frontend/services/firebase.ts
+          cat <<EOF > frontend/services/firebase.js
+          ${{ secrets.FIREBASE_JS_CONFIG }}
+          EOF
 
       - name: 🔧 Install & Build Frontend
         run: |
