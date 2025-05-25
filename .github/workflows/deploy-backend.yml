@@ -41,4 +41,5 @@ jobs:
             --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/fastapi-backend \
             --region us-central1 \
             --platform managed \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --set-env-vars OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
