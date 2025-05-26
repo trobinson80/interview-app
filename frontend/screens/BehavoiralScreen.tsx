@@ -26,7 +26,6 @@ import Constants from 'expo-constants';
 // const API_BASE = 'http://localhost:8000';
 const API_BASE = Constants.expoConfig?.extra?.apiBase ?? '';
 const isWeb = Platform.OS === 'web';
-console.log("API_BASE:", API_BASE); 
 
 type NavigationProp = NativeStackNavigationProp<BehavioralStackParamList>;
 
@@ -222,7 +221,6 @@ export default function BehavioralScreen() {
   };
 
   const startSession = async () => {
-    console.log("API_BASE:", API_BASE); 
     setLoading(true);
     setAnswer('');
     setSubmitted(false);
