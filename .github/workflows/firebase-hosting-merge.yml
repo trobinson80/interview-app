@@ -27,7 +27,7 @@ jobs:
           cd frontend
           npm install --legacy-peer-deps
           export API_BASE=${{ secrets.API_BASE }}
-          npm run build
+          npx expo export:web
 
       - name: 🚀 Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
