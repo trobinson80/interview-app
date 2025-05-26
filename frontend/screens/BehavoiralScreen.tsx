@@ -51,6 +51,7 @@ interface FeedbackResponse {
 }
 
 export default function BehavioralScreen() {
+  console.log("API_BASE:", API_BASE); 
   const [question, setQuestion] = useState('');
   const [questionId, setQuestionId] = useState('');
   const [sessionId, setSessionId] = useState('');

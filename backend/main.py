@@ -7,7 +7,7 @@ app = FastAPI()
 # Allow frontend origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with frontend URLs in prod
+    allow_origins=["https://interview-app-48d25.web.app/"],  # Replace with frontend URLs in prod
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
