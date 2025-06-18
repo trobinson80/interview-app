@@ -60,6 +60,8 @@ export default function BehavioralScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackResponse | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const showMascot = false; // Set to true to re-enable mascot visuals
+
 
   const { width } = useWindowDimensions();
   const isWideScreen = width > 600;
@@ -346,7 +348,7 @@ export default function BehavioralScreen() {
           )}
         </View>
       </View>
-
+      { showMascot && (
       <View style={styles.mascotWrapper}>
         <MascotBot
           image={require('../assets/Echo.png')}
@@ -359,6 +361,7 @@ export default function BehavioralScreen() {
           ]}
         />
       </View>
+      )} 
     </ScrollView>
   );
 }
