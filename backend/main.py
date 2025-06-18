@@ -18,7 +18,7 @@ app.include_router(user_router, prefix="/user")
 
 @app.get("/")
 def read_root():
-    return {"msg": "FastAPI backend is live"}
+    return {"msg": "NxtRoundInterviewApp Backend is live"}
 
 if __name__ == "__main__":
     import os
